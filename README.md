@@ -23,6 +23,10 @@ linkedin_post_generator/
 
 The linkedin_post_generator app is an asynchronous API designed to generate LinkedIn posts based on provided PDF documents. Here is a high-level overview of its components and functionality:
 
+## RAG-Architecture
+
+![RAG-Architecture](assets/RAG-Architecture.excalidraw.png)
+
 ## Main Components
 1. FastAPI Application (main.py):
     - The app is built using FastAPI, a modern, fast (high-performance) web framework for building APIs with Python.
