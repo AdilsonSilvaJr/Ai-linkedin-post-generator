@@ -1,24 +1,3 @@
-# Folder Structure
-```
-linkedin_post_generator/
-├── app/
-│   ├── __init__.py
-│   ├── dependencies.py
-│   ├── main.py
-│   ├── models.py
-│   ├── pdf_processor.py
-│   ├── services.py
-│   └── vector_store.py
-├── sources/
-├── vector_db/
-├── .dockerignore
-├── .env
-├── .gitignore
-├── docker-compose.yml
-├── dockerfile
-├── requirements.txt
-└── run.py
-```
 # Description
 
 The linkedin_post_generator app is an asynchronous API designed to generate LinkedIn posts based on provided PDF documents. Here is a high-level overview of its components and functionality:
@@ -94,6 +73,28 @@ The linkedin_post_generator app is an asynchronous API designed to generate Link
 Swagger UI: http://localhost:8000/docs
 
 ReDoc: http://localhost:8000/redoc
+
+# Folders Structure
+```
+linkedin_post_generator/
+├── app/
+│   ├── __init__.py
+│   ├── dependencies.py
+│   ├── main.py
+│   ├── models.py
+│   ├── pdf_processor.py
+│   ├── services.py
+│   └── vector_store.py
+├── sources/
+├── vector_db/
+├── .dockerignore
+├── .env
+├── .gitignore
+├── docker-compose.yml
+├── dockerfile
+├── requirements.txt
+└── run.py
+```
 
 # Author
 
