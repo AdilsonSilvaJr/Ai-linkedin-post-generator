@@ -1,0 +1,20 @@
+# Python
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+
+# Docker
+*.log
+*.pid
+*.sock
+*.out
+*.db
+
+# Volumes
+vector_db/
+#source/
