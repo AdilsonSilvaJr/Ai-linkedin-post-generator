@@ -25,7 +25,7 @@ The linkedin_post_generator app is an asynchronous API designed to generate Link
 
 ## RAG-Architecture
 
-![RAG-Architecture](assets/RAG-Architecture.excalidraw.png)
+![RAG-Architecture](assets/RAG-Architecture.png)
 
 ## Main Components
 1. FastAPI Application (main.py):
