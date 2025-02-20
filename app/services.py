@@ -39,41 +39,39 @@ class PostGeneratorService:
                Do not include any information from the context that is not relevant to the post."""
 
     async def _check_files_changed(self) -> Dict[str, bool]:
-        """
-        Check which files have changed or are new.
-        Returns a dictionary of {filename: needs_update}.
-        """
+        logger.info("Checking for file changes...")
         if not os.path.exists(self.vector_db_path):
             os.makedirs(self.vector_db_path, exist_ok=True)
+            logger.info(f"Created vector_db_path: {self.vector_db_path}")
             
         existing_hashes = await load_existing_hashes(self.hash_store_path)
         files_status = {}
         
         pdf_files = [f for f in os.listdir(self.source_folder) if f.endswith('.pdf')]
         
-        # Check all current files
         for file_name in pdf_files:
             file_path = os.path.join(self.source_folder, file_name)
             current_hash = await calculate_file_hash(file_path)
             
-            # File needs update if it's new or hash has changed
             needs_update = (file_name not in existing_hashes or 
                           existing_hashes[file_name] != current_hash)
             files_status[file_name] = {
                 'needs_update': needs_update,
                 'current_hash': current_hash
             }
+            logger.info(f"File {file_name} needs update: {needs_update}")
             
         return files_status
 
     async def _update_vector_store(self):
         """Update vector store asynchronously."""
         try:
-            # Check which files need to be updated
+            logger.info("Updating vector store...")
             files_status = await self._check_files_changed()
             files_to_update = [f for f, status in files_status.items() 
                              if status['needs_update']]
-            
+            logger.info(f"Files to update: {files_to_update}")
+
             # If no files need updating and vector store exists, just load it
             if not files_to_update and os.path.exists(os.path.join(self.vector_db_path, "index.faiss")):
                 def _load_existing_store():
@@ -177,12 +175,18 @@ class PostGeneratorService:
 
     async def generate_posts(self, num_posts: int = 3, custom_prompt: str | None = None) -> List[LinkedInPost]:
         """Generate multiple posts concurrently."""
-        vector_store = await self._update_vector_store()
-        query = custom_prompt if custom_prompt else self._get_default_prompt()
-        
-        tasks = []
-        for _ in range(num_posts):
-            task = self._generate_single_post(vector_store, query)
-            tasks.append(task)
-        
-        return await asyncio.gather(*tasks)
+        try:
+            vector_store = await self._update_vector_store()
+            query = custom_prompt if custom_prompt else self._get_default_prompt()
+            
+            tasks = []
+            for _ in range(num_posts):
+                task = self._generate_single_post(vector_store, query)
+                tasks.append(task)
+            
+            posts = await asyncio.gather(*tasks)
+            logger.info("Successfully generated %d posts", num_posts)
+            return posts
+        except Exception as e:
+            logger.error("Error generating posts: %s", str(e))
+            raise

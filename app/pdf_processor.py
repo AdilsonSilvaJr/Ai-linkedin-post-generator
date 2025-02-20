@@ -6,13 +6,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 async def load_pdf(file_path: str):
     """Load a single PDF file asynchronously."""
+    logger.info("Loading PDF file: %s", file_path)
     def _load():
         loader = PyPDFLoader(file_path)
         return loader.load()
     
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor() as pool:
-        return await loop.run_in_executor(pool, _load)
+        documents = await loop.run_in_executor(pool, _load)
+    logger.info("Loaded %d documents from PDF file: %s", len(documents), file_path)
+    return documents
 
 async def split_documents(documents, chunk_size=500, chunk_overlap=100):
     """Split documents asynchronously."""

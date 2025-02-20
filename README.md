@@ -33,39 +33,47 @@ The linkedin_post_generator app is an asynchronous API designed to generate Link
     - Provides dependency injection for embeddings and language models.
     - Uses environment variables to configure API keys for external services like Google Generative AI.
 
-# Usage 1 - Docker
+# Usage
 
-1. Create a .env file in the root folder with the LLM API you are using
-    ``` bash
+## Running with Docker
+
+1. Create a `.env` file in the root folder with your API keys:
+    ```bash
     OPENAI_API_KEY=<your-api-key>
     GOOGLE_API_KEY=<your-api-key>
     ```
 
-1. Run docker-comporse: 
-    ``` bash
+1. Build and run the Docker container:
+    ```bash
     docker-compose up --build
     ```
 
-1. Open your browser
-    ``` bash
+1. Access the API documentation:
+    ```bash
     http://localhost:8000/docs
     ```
-# Usage 2 - Local
 
-1. Create a .env file in the root folder with the LLM API you are using
-    ``` bash
+## Running Locally
+
+1. Create a  file in the root folder with your API keys:
+    ```bash
     OPENAI_API_KEY=<your-api-key>
     GOOGLE_API_KEY=<your-api-key>
     ```
 
-1. Install dependencies: 
-    ``` bash
-    pip install -r requirements.txt`
+1. Install dependencies:
+    ```bash
+    pip install -r requirements.txt
     ```
 
-1. Run the script: 
-    ``` bash
+1. Run the application:
+    ```bash
     python run.py
+    ```
+
+1. Access the API documentation:
+    ```bash
+    http://localhost:8000/docs
     ```
 
 # Documentation

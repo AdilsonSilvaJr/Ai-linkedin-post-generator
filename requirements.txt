@@ -1,7 +1,7 @@
 aiohttp>=3.9.2
 aiofiles>=0.6.0
 asyncio>=3.4.3
-faiss-cpu==1.9.0.post1
+faiss-cpu==1.10.0
 fastapi>=0.115.6
 langchain-community==0.3.13
 langchain-huggingface==0.1.2
@@ -11,6 +11,3 @@ langchain_google_genai==2.0.9
 pydantic>=2.10.4
 pypdf==5.1.0
 uvicorn>=0.34.0
-
-
-
