@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.logging_config import configure_logging
 from .api.endpoints import posts
+from .api.endpoints import vector_store
 
 # Configure logging with both file and console handlers
 configure_logging()
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(posts.router, prefix="/generate-posts", tags=["posts"])
+app.include_router(vector_store.router, prefix="/vector-store", tags=["vector_store"])
 
 @app.on_event("startup")
 async def startup_event():
