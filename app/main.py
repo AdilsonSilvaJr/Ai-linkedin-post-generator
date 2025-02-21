@@ -56,8 +56,6 @@ async def generate_posts(
 async def startup_event():
     logger.info("Application startup: LinkedIn Post Generator API is now running.")
     # Add additional startup checks
-    logger.info(f"FastAPI version: {FastAPI.__version__}")
-    logger.info(f"Environment: {app.debug and 'Development' or 'Production'}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

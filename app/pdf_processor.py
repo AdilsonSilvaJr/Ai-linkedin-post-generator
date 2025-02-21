@@ -1,8 +1,12 @@
 import os
+import logging
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 async def load_pdf(file_path: str):
     """Load a single PDF file asynchronously."""

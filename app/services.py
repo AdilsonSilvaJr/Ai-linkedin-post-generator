@@ -4,7 +4,9 @@ import logging
 from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor
 from langchain.chains import RetrievalQA
-from langchain_community.vectorstores import FAISS
+from langchain_chroma import Chroma
+from chromadb.config import Settings
+from chromadb import PersistentClient  # Add this import
 
 from .models import LinkedInPost
 from .vector_store import (
@@ -14,9 +16,12 @@ from .vector_store import (
 )
 from .pdf_processor import load_pdf
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging - Move this to the very top after imports
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 class PostGeneratorService:
     def __init__(self, embeddings, llm, session):
@@ -26,7 +31,17 @@ class PostGeneratorService:
         self.source_folder = "./sources"
         self.vector_db_path = "vector_db"
         self.hash_store_path = os.path.join(self.vector_db_path, "hash_store.txt")
-        
+        self.chroma_settings = Settings(
+            anonymized_telemetry=False,
+            is_persistent=True,
+            persist_directory=self.vector_db_path
+        )
+        # Initialize ChromaDB client
+        self.chroma_client = PersistentClient(
+            path=self.vector_db_path,
+            settings=self.chroma_settings
+        )
+
     def _get_default_prompt(self):
         return """Create a LinkedIn post summarizing insights from the context.
                Keep focus on create databricks tips of implementing and best practices.
@@ -72,30 +87,18 @@ class PostGeneratorService:
                              if status['needs_update']]
             logger.info(f"Files to update: {files_to_update}")
 
-            # If no files need updating and vector store exists, just load it
-            if not files_to_update and os.path.exists(os.path.join(self.vector_db_path, "index.faiss")):
-                def _load_existing_store():
-                    return FAISS.load_local(
-                        self.vector_db_path,
-                        self.embeddings,
-                        allow_dangerous_deserialization=True
-                    )
-                loop = asyncio.get_running_loop()
-                with ThreadPoolExecutor() as pool:
-                    return await loop.run_in_executor(pool, _load_existing_store)
+            # Initialize or load the collection
+            def _get_or_create_collection():
+                return Chroma(
+                    client=self.chroma_client,
+                    collection_name="linkedin_posts",
+                    embedding_function=self.embeddings,
+                    persist_directory=self.vector_db_path
+                )
 
-            # Load existing vector store if it exists
-            vector_store = None
-            if os.path.exists(os.path.join(self.vector_db_path, "index.faiss")):
-                def _load_vector_store():
-                    return FAISS.load_local(
-                        self.vector_db_path,
-                        self.embeddings,
-                        allow_dangerous_deserialization=True
-                    )
-                loop = asyncio.get_running_loop()
-                with ThreadPoolExecutor() as pool:
-                    vector_store = await loop.run_in_executor(pool, _load_vector_store)
+            loop = asyncio.get_running_loop()
+            with ThreadPoolExecutor() as pool:
+                vector_store = await loop.run_in_executor(pool, _get_or_create_collection)
 
             # Load and process only the files that need updating
             updated_hashes = {}
@@ -106,10 +109,14 @@ class PostGeneratorService:
                 def _process_documents():
                     nonlocal vector_store
                     if vector_store is None:
-                        vector_store = FAISS.from_documents(documents, self.embeddings)
+                        vector_store = Chroma.from_documents(
+                            documents,
+                            self.embeddings,
+                            collection_name="linkedin_posts",
+                            client=self.chroma_client
+                        )
                     else:
                         vector_store.add_documents(documents)
-                    vector_store.save_local(self.vector_db_path)
                     return vector_store
 
                 loop = asyncio.get_running_loop()
@@ -121,37 +128,15 @@ class PostGeneratorService:
 
             # Save updated hashes if any files were processed
             if updated_hashes:
-                # Load existing hashes to preserve hashes of unchanged files
                 existing_hashes = await load_existing_hashes(self.hash_store_path)
-                # Update with new hashes
                 existing_hashes.update(updated_hashes)
-                # Save all hashes
                 await save_file_hashes(existing_hashes, self.hash_store_path)
 
-            # Ensure the vector store is saved properly
-            if vector_store:
-                vector_store.save_local(self.vector_db_path)
-                logger.info(f"Vector store saved at {self.vector_db_path}")
-
-            # Verify that the vector store file exists
-            if not os.path.exists(os.path.join(self.vector_db_path, "index.faiss")):
-                logger.info("Vector store file not found, creating a new one.")
-                # Create a new vector store from the documents if the file does not exist
-                all_documents = []
-                for file_name in os.listdir(self.source_folder):
-                    if file_name.endswith('.pdf'):
-                        file_path = os.path.join(self.source_folder, file_name)
-                        documents = await load_pdf(file_path)
-                        all_documents.extend(documents)
-                vector_store = FAISS.from_documents(all_documents, self.embeddings)
-                vector_store.save_local(self.vector_db_path)
-                logger.info(f"New vector store created and saved at {self.vector_db_path}")
-
-            # Return the vector store
-            return vector_store or FAISS.load_local(
-                self.vector_db_path,
-                self.embeddings,
-                allow_dangerous_deserialization=True
+            return vector_store or Chroma(
+                client=self.chroma_client,
+                collection_name="linkedin_posts",
+                embedding_function=self.embeddings,
+                persist_directory=self.vector_db_path
             )
 
         except Exception as e:
