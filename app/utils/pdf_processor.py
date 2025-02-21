@@ -5,7 +5,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
 async def load_pdf(file_path: str):

@@ -1,23 +1,14 @@
 import logging
 import sys
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import aiohttp
-from .dependencies import get_embeddings, get_llm, get_async_session
-from .models import LinkedInPostRequest, LinkedInPostResponse
-from .services import PostGeneratorService
+from .core.logging_config import configure_logging
+from .api.endpoints import posts
 
 # Configure logging with both file and console handlers
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("app.log"),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger(__name__)
+configure_logging()
 
+logger = logging.getLogger(__name__)
 logger.info("Starting LinkedIn Post Generator API...")
 
 app = FastAPI(
@@ -34,23 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/generate-posts/", response_model=LinkedInPostResponse)
-async def generate_posts(
-    request: LinkedInPostRequest,
-    embeddings=Depends(get_embeddings),
-    llm=Depends(get_llm),
-    session: aiohttp.ClientSession = Depends(get_async_session)
-):
-    try:
-        service = PostGeneratorService(embeddings, llm, session)
-        posts = await service.generate_posts(
-            request.num_posts,
-            request.custom_prompt
-        )
-        return LinkedInPostResponse(posts=posts)
-    except Exception as e:
-        logger.error(f"Error generating posts: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+app.include_router(posts.router, prefix="/generate-posts", tags=["posts"])
 
 @app.on_event("startup")
 async def startup_event():

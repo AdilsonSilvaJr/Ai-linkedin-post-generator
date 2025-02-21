@@ -6,22 +6,17 @@ from concurrent.futures import ThreadPoolExecutor
 from langchain.chains import RetrievalQA
 from langchain_chroma import Chroma
 from chromadb.config import Settings
-from chromadb import PersistentClient  # Add this import
+from chromadb import PersistentClient
 
-from .models import LinkedInPost
-from .vector_store import (
+from ..models.post_models import LinkedInPost
+from ..utils.vector_store import (
     calculate_file_hash,
     load_existing_hashes,
     save_file_hashes,
 )
-from .pdf_processor import load_pdf
+from ..utils.pdf_processor import load_pdf
 
-# Configure logging - Move this to the very top after imports
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 
 class PostGeneratorService:
     def __init__(self, embeddings, llm, session):
@@ -36,7 +31,6 @@ class PostGeneratorService:
             is_persistent=True,
             persist_directory=self.vector_db_path
         )
-        # Initialize ChromaDB client
         self.chroma_client = PersistentClient(
             path=self.vector_db_path,
             settings=self.chroma_settings
@@ -87,7 +81,6 @@ class PostGeneratorService:
                              if status['needs_update']]
             logger.info(f"Files to update: {files_to_update}")
 
-            # Initialize or load the collection
             def _get_or_create_collection():
                 return Chroma(
                     client=self.chroma_client,
@@ -100,7 +93,6 @@ class PostGeneratorService:
             with ThreadPoolExecutor() as pool:
                 vector_store = await loop.run_in_executor(pool, _get_or_create_collection)
 
-            # Load and process only the files that need updating
             updated_hashes = {}
             for file_name in files_to_update:
                 file_path = os.path.join(self.source_folder, file_name)
@@ -123,10 +115,8 @@ class PostGeneratorService:
                 with ThreadPoolExecutor() as pool:
                     vector_store = await loop.run_in_executor(pool, _process_documents)
                 
-                # Update hash for processed file
                 updated_hashes[file_name] = files_status[file_name]['current_hash']
 
-            # Save updated hashes if any files were processed
             if updated_hashes:
                 existing_hashes = await load_existing_hashes(self.hash_store_path)
                 existing_hashes.update(updated_hashes)
@@ -144,7 +134,6 @@ class PostGeneratorService:
             raise
 
     async def _generate_single_post(self, vector_store, query: str) -> LinkedInPost:
-        """Generate a single post asynchronously."""
         def _generate():
             qa_chain = RetrievalQA.from_chain_type(
                 retriever=vector_store.as_retriever(),
@@ -159,7 +148,6 @@ class PostGeneratorService:
             return LinkedInPost(content=result["result"])
 
     async def generate_posts(self, num_posts: int = 3, custom_prompt: str | None = None) -> List[LinkedInPost]:
-        """Generate multiple posts concurrently."""
         try:
             vector_store = await self._update_vector_store()
             query = custom_prompt if custom_prompt else self._get_default_prompt()
