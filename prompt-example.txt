@@ -1,0 +1,9 @@
+Create a LinkedIn post summarizing insights from the context.
+Keep the focus on creating Datalakehouse vs Datawarehouse vs Datalake.
+Keep it under 300 words.
+Keep it simple for people to read and direct.
+Add emojis to make it engaging.
+Do not use **.
+Do not mention any of the sources or books.
+Do not include any links or references.
+Do not include any information from the context that is not relevant to the post

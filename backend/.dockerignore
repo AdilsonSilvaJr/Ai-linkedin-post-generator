@@ -1,0 +1,67 @@
+# File: /linkedin-post-generator/linkedin-post-generator/backend/.dockerignore
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore IDE/editor config files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore environment files
+.env
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.pytest_cache/
+
+# Ignore other unnecessary files
+.git/
+.gitignore
+README.md
+app.log
+*.pid
+*.sock
+*.out
+*.db
+assets/
+vector_db/
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
